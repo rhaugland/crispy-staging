@@ -10,7 +10,7 @@ from staging.models import Job, JobStatus, RoomType, Style
 def pipeline():
     return StagingPipeline(
         storage=MagicMock(),
-        luma_client=AsyncMock(),
+        reconstructor=MagicMock(),
         room_classifier=AsyncMock(),
         quality_gate=AsyncMock(),
     )

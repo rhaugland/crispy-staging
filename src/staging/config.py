@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     max_photos: int = 4
     min_photos: int = 3
     max_file_size_mb: int = 20
-    min_resolution: tuple[int, int] = (1920, 1080)
+    min_resolution: tuple[int, int] = (640, 480)
     max_resolution: tuple[int, int] = (8000, 6000)
     quality_gate_max_retries: int = 2
     checkpoint_ttl_days: int = 30

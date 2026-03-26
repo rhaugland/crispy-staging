@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Virtual Staging</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,500;0,600;1,300&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --cream: #faf8f5;
+    --stone: #e8e4df;
+    --warm: #c4b5a4;
+    --gold: #b08d57;
+    --gold-light: #d4b98a;
+    --sage: #7a8b6f;
+    --error: #a0453e;
+    --serif: 'Cormorant Garamond', Georgia, serif;
+    --sans: 'DM Sans', -apple-system, sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* Header */
+  header {
+    padding: 2rem 3rem;
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    border-bottom: 1px solid var(--stone);
+  }
+
+  header h1 {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: 1.8rem;
+    letter-spacing: 0.04em;
+  }
+
+  header span {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--warm);
+  }
+
+  /* Main */
+  main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 3rem 2rem 6rem;
+  }
+
+  .page-title {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: 2.4rem;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.02em;
+  }
+
+  .page-subtitle {
+    color: var(--warm);
+    font-size: 0.9rem;
+    margin-bottom: 3rem;
+    max-width: 500px;
+    line-height: 1.6;
+  }
+
+  /* Upload Zone */
+  .upload-zone {
+    border: 2px dashed var(--stone);
+    border-radius: 12px;
+    padding: 3rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: white;
+    position: relative;
+  }
+
+  .upload-zone:hover, .upload-zone.dragover {
+    border-color: var(--gold);
+    background: #fdfcfa;
+  }
+
+  .upload-zone.has-files {
+    border-style: solid;
+    border-color: var(--stone);
+    padding: 1.5rem;
+  }
+
+  .upload-icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 1rem;
+    opacity: 0.3;
+  }
+
+  .upload-text {
+    font-family: var(--serif);
+    font-size: 1.3rem;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 0.5rem;
+  }
+
+  .upload-hint {
+    font-size: 0.8rem;
+    color: var(--warm);
+  }
+
+  input[type="file"] { display: none; }
+
+  /* Preview Grid */
+  .preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1rem;
+  }
+
+  .preview-item {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    aspect-ratio: 3/2;
+    background: var(--stone);
+  }
+
+  .preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .preview-item .remove-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0,0,0,0.5);
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .preview-item:hover .remove-btn { opacity: 1; }
+
+  /* Options */
+  .options-row {
+    display: flex;
+    gap: 2rem;
+    margin: 2rem 0;
+    flex-wrap: wrap;
+  }
+
+  .option-group {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .option-group label {
+    display: block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--warm);
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+  }
+
+  .option-group select {
+    width: 100%;
+    padding: 0.7rem 1rem;
+    border: 1px solid var(--stone);
+    border-radius: 6px;
+    background: white;
+    font-family: var(--sans);
+    font-size: 0.9rem;
+    color: var(--ink);
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23b0a090' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    cursor: pointer;
+  }
+
+  /* Submit */
+  .submit-btn {
+    display: block;
+    width: 100%;
+    padding: 1rem;
+    margin-top: 2rem;
+    border: none;
+    border-radius: 8px;
+    background: var(--ink);
+    color: var(--cream);
+    font-family: var(--serif);
+    font-size: 1.1rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .submit-btn:hover:not(:disabled) {
+    background: var(--gold);
+    color: white;
+  }
+
+  .submit-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  /* Progress */
+  .progress-section {
+    display: none;
+    margin-top: 2rem;
+  }
+
+  .progress-section.active { display: block; }
+
+  .progress-bar-track {
+    height: 3px;
+    background: var(--stone);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--gold);
+    border-radius: 2px;
+    width: 0%;
+    transition: width 0.6s ease;
+  }
+
+  .progress-steps {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .step {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    background: var(--stone);
+    color: var(--warm);
+    transition: all 0.3s ease;
+  }
+
+  .step.active {
+    background: var(--gold);
+    color: white;
+  }
+
+  .step.done {
+    background: var(--sage);
+    color: white;
+  }
+
+  /* Results */
+  .results-section {
+    display: none;
+    margin-top: 3rem;
+  }
+
+  .results-section.active { display: block; }
+
+  .results-title {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: 1.6rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .results-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .result-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .result-side {
+    position: relative;
+  }
+
+  .result-side img {
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid var(--stone);
+    display: block;
+  }
+
+  .result-label {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-weight: 600;
+    padding: 0.3rem 0.7rem;
+    border-radius: 4px;
+    backdrop-filter: blur(8px);
+  }
+
+  .result-label.before {
+    background: rgba(255,255,255,0.85);
+    color: var(--warm);
+  }
+
+  .result-label.after {
+    background: rgba(176,141,87,0.9);
+    color: white;
+  }
+
+  /* Constraints info */
+  .constraints {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .constraint {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.75rem;
+    color: var(--warm);
+  }
+
+  .constraint svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    opacity: 0.5;
+  }
+
+  /* Room guidelines */
+  .room-guidelines {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: white;
+    border: 1px solid var(--stone);
+    border-radius: 10px;
+  }
+
+  .guidelines-title {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    color: var(--ink);
+    letter-spacing: 0.02em;
+  }
+
+  .guidelines-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  @media (max-width: 600px) {
+    .guidelines-grid { grid-template-columns: 1fr; }
+  }
+
+  .guideline {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+
+  .guideline-icon {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    margin-top: 1px;
+  }
+
+  .guideline-icon.check {
+    color: var(--sage);
+  }
+
+  .guideline-icon.x {
+    color: var(--error);
+    opacity: 0.7;
+  }
+
+  .guideline-icon svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .guideline-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .guideline-text strong {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .guideline-text span {
+    font-size: 0.72rem;
+    color: var(--warm);
+    line-height: 1.4;
+  }
+
+  /* Diff canvas overlay */
+  .result-side canvas.diff-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .result-side:hover canvas.diff-overlay {
+    opacity: 1;
+  }
+
+  .diff-hint {
+    font-size: 0.7rem;
+    color: var(--warm);
+    text-align: center;
+    margin-top: 0.5rem;
+    font-style: italic;
+  }
+
+  /* Error */
+  .error-msg {
+    display: none;
+    padding: 1rem;
+    border-radius: 8px;
+    background: #fdf2f1;
+    border: 1px solid #e8c8c5;
+    color: var(--error);
+    font-size: 0.85rem;
+    margin-top: 1rem;
+  }
+
+  .error-msg.active { display: block; }
+
+  /* New job button */
+  .new-job-btn {
+    display: inline-block;
+    margin-top: 2rem;
+    padding: 0.7rem 1.5rem;
+    border: 1px solid var(--stone);
+    border-radius: 6px;
+    background: white;
+    font-family: var(--sans);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .new-job-btn:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  /* Toast notification */
+  .toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--ink);
+    color: var(--cream);
+    padding: 0.7rem 1.5rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Progress status text */
+  .progress-status {
+    font-size: 0.85rem;
+    color: var(--warm);
+    margin-top: 1rem;
+    text-align: center;
+  }
+
+  /* Animations */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .fade-in { animation: fadeIn 0.5s ease forwards; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Virtual Staging</h1>
+  <span>by Isotropic</span>
+</header>
+
+<main>
+  <!-- Upload Form -->
+  <div id="upload-section">
+    <h2 class="page-title">Stage Your Listing</h2>
+    <p class="page-subtitle">
+      Upload 3–4 photos of the same room from different angles. We'll reconstruct the space and place furniture consistently across every view.
+    </p>
+
+    <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
+      <svg class="upload-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="6" y="10" width="36" height="28" rx="3"/>
+        <circle cx="18" cy="22" r="4"/>
+        <path d="M6 34l10-10 8 8 6-6 12 12"/>
+      </svg>
+      <div class="upload-text">Drop photos here</div>
+      <div class="upload-hint">or click to browse — JPEG or PNG, 3–4 photos</div>
+    </div>
+
+    <input type="file" id="file-input" accept="image/jpeg,image/png" multiple>
+
+    <div class="constraints">
+      <div class="constraint">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M6 2v12M10 2v12M2 6h12M2 10h12"/></svg>
+        3–4 photos
+      </div>
+      <div class="constraint">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="3" width="14" height="10" rx="2"/><circle cx="5.5" cy="7" r="1.5"/><path d="M1 11l4-4 3 3 2-2 5 5"/></svg>
+        JPEG or PNG
+      </div>
+      <div class="constraint">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 14V4l6-2 6 2v10"/><path d="M8 2v12"/></svg>
+        Min 640 x 480 px
+      </div>
+      <div class="constraint">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v8M5 7l3 3 3-3"/><path d="M2 12v2h12v-2"/></svg>
+        Max 20 MB each
+      </div>
+    </div>
+
+    <div class="room-guidelines">
+      <h3 class="guidelines-title">Staging Rules</h3>
+      <div class="guidelines-grid">
+        <div class="guideline">
+          <div class="guideline-icon check">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <div class="guideline-text">
+            <strong>Furniture &amp; soft furnishings only</strong>
+            <span>Sofas, tables, rugs, chairs, and tasteful decor</span>
+          </div>
+        </div>
+        <div class="guideline">
+          <div class="guideline-icon check">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <div class="guideline-text">
+            <strong>A painting or two on walls</strong>
+            <span>Small wall art is acceptable</span>
+          </div>
+        </div>
+        <div class="guideline">
+          <div class="guideline-icon x">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </div>
+          <div class="guideline-text">
+            <strong>No structural changes</strong>
+            <span>Walls, floors, ceilings, and permanent fixtures stay untouched</span>
+          </div>
+        </div>
+        <div class="guideline">
+          <div class="guideline-icon x">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </div>
+          <div class="guideline-text">
+            <strong>No curtains or window treatments</strong>
+            <span>Windows remain as-is in the original photos</span>
+          </div>
+        </div>
+        <div class="guideline">
+          <div class="guideline-icon x">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </div>
+          <div class="guideline-text">
+            <strong>No hanging lights or chandeliers</strong>
+            <span>No ceiling-mounted lighting of any kind</span>
+          </div>
+        </div>
+        <div class="guideline">
+          <div class="guideline-icon check">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <div class="guideline-text">
+            <strong>Consistent across all angles</strong>
+            <span>Same furniture appears in every photo of the room</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="preview-grid" id="preview-grid" style="display:none;"></div>
+
+    <div class="options-row">
+      <div class="option-group">
+        <label>Room Type</label>
+        <select id="room-type">
+          <option value="living">Living Room</option>
+          <option value="bedroom">Bedroom</option>
+          <option value="dining">Dining Room</option>
+          <option value="office">Home Office</option>
+          <option value="kitchen">Kitchen</option>
+          <option value="bathroom">Bathroom</option>
+        </select>
+      </div>
+      <div class="option-group">
+        <label>Style</label>
+        <select id="style">
+          <option value="modern">Modern</option>
+          <option value="traditional">Traditional</option>
+          <option value="scandinavian">Scandinavian</option>
+          <option value="luxury">Luxury</option>
+          <option value="coastal">Coastal</option>
+          <option value="midcenturymodern">Mid-Century Modern</option>
+          <option value="farmhouse">Farmhouse</option>
+          <option value="industrial">Industrial</option>
+          <option value="minimalist">Minimalist</option>
+          <option value="contemporary">Contemporary</option>
+          <option value="boho">Bohemian</option>
+          <option value="rustic">Rustic</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="submit-btn" id="submit-btn" disabled>
+      Begin Staging
+    </button>
+
+    <div class="error-msg" id="error-msg"></div>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-section" id="progress-section">
+    <h2 class="page-title">Processing</h2>
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" id="progress-fill"></div>
+    </div>
+    <div class="progress-steps" id="progress-steps">
+      <span class="step" data-step="pending">Queued</span>
+      <span class="step" data-step="staging">Staging</span>
+      <span class="step" data-step="completed">Complete</span>
+    </div>
+    <p class="progress-status" id="progress-status"></p>
+  </div>
+
+  <!-- Results -->
+  <div class="results-section" id="results-section">
+    <h2 class="results-title">Staging Complete</h2>
+    <div id="results-content" class="results-grid"></div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const uploadZone = document.getElementById('upload-zone');
+const fileInput = document.getElementById('file-input');
+const previewGrid = document.getElementById('preview-grid');
+const submitBtn = document.getElementById('submit-btn');
+const errorMsg = document.getElementById('error-msg');
+const progressSection = document.getElementById('progress-section');
+const resultsSection = document.getElementById('results-section');
+
+let selectedFiles = [];
+
+// Drag & drop
+uploadZone.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  uploadZone.classList.add('dragover');
+});
+
+uploadZone.addEventListener('dragleave', () => {
+  uploadZone.classList.remove('dragover');
+});
+
+uploadZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  uploadZone.classList.remove('dragover');
+  handleFiles(e.dataTransfer.files);
+});
+
+fileInput.addEventListener('change', (e) => {
+  handleFiles(e.target.files);
+});
+
+function handleFiles(files) {
+  let added = 0;
+  for (const f of files) {
+    if (selectedFiles.length >= 4) break;
+    if (!f.type.match(/^image\/(jpeg|png)$/)) continue;
+    selectedFiles.push(f);
+    added++;
+  }
+  if (added > 0) {
+    showToast(`${added} photo${added > 1 ? 's' : ''} added`);
+  }
+  updatePreviews();
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+function updatePreviews() {
+  if (selectedFiles.length === 0) {
+    previewGrid.style.display = 'none';
+    uploadZone.style.display = 'block';
+    uploadZone.classList.remove('has-files');
+    submitBtn.disabled = true;
+    return;
+  }
+
+  previewGrid.style.display = 'grid';
+  previewGrid.innerHTML = '';
+
+  if (selectedFiles.length < 4) {
+    uploadZone.style.display = 'block';
+    uploadZone.classList.add('has-files');
+  } else {
+    uploadZone.style.display = 'none';
+  }
+
+  selectedFiles.forEach((file, i) => {
+    const div = document.createElement('div');
+    div.className = 'preview-item fade-in';
+    div.style.animationDelay = `${i * 0.1}s`;
+
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(file);
+
+    const btn = document.createElement('button');
+    btn.className = 'remove-btn';
+    btn.innerHTML = '×';
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      selectedFiles.splice(i, 1);
+      updatePreviews();
+    };
+
+    div.appendChild(img);
+    div.appendChild(btn);
+    previewGrid.appendChild(div);
+  });
+
+  submitBtn.disabled = selectedFiles.length < 3;
+}
+
+// Submit
+submitBtn.addEventListener('click', async () => {
+  if (selectedFiles.length < 3) return;
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Uploading…';
+  hideError();
+
+  const formData = new FormData();
+  selectedFiles.forEach(f => formData.append('photos', f));
+  formData.append('room_type', document.getElementById('room-type').value);
+  formData.append('style', document.getElementById('style').value);
+
+  try {
+    const resp = await fetch('/api/v1/jobs', { method: 'POST', body: formData });
+    if (!resp.ok) {
+      const err = await resp.json();
+      throw new Error(err.detail || 'Upload failed');
+    }
+    const data = await resp.json();
+    showProgress(data.job_id);
+  } catch (e) {
+    showError(e.message);
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Begin Staging';
+  }
+});
+
+// Progress polling
+function showProgress(jobId) {
+  document.getElementById('upload-section').style.display = 'none';
+  progressSection.classList.add('active');
+
+  const statusMap = { pending: 0, staging: 1, completed: 2 };
+  const statusEl = document.getElementById('progress-status');
+
+  const poll = setInterval(async () => {
+    try {
+      const resp = await fetch(`/api/v1/jobs/${jobId}`);
+      const data = await resp.json();
+      const status = data.status;
+      const done = data.photos_done || 0;
+      const total = data.photos_total || 1;
+
+      // Calculate real progress percentage
+      let pct = 5; // pending
+      if (status === 'staging') {
+        pct = 10 + Math.round((done / total) * 85); // 10% to 95%
+        statusEl.textContent = `Staging photo ${done + 1} of ${total}...`;
+        if (done === total) statusEl.textContent = `Finalizing...`;
+      } else if (status === 'completed') {
+        pct = 100;
+        statusEl.textContent = '';
+      }
+      document.getElementById('progress-fill').style.width = pct + '%';
+
+      // Update step pills
+      const idx = statusMap[status] ?? 0;
+      document.querySelectorAll('.step').forEach((el, i) => {
+        el.classList.remove('active', 'done');
+        if (i < idx) el.classList.add('done');
+        if (i === idx) el.classList.add('active');
+      });
+
+      if (status === 'completed') {
+        clearInterval(poll);
+        showResults(jobId);
+      } else if (status === 'failed') {
+        clearInterval(poll);
+        progressSection.classList.remove('active');
+        document.getElementById('upload-section').style.display = 'block';
+        showError(data.error || 'Processing failed');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Begin Staging';
+      }
+    } catch (e) {
+      // keep polling
+    }
+  }, 1500);
+}
+
+async function showResults(jobId) {
+  progressSection.classList.remove('active');
+  resultsSection.classList.add('active');
+  resultsSection.classList.add('fade-in');
+
+  try {
+    const resp = await fetch(`/api/v1/jobs/${jobId}/results`);
+    const data = await resp.json();
+
+    const content = document.getElementById('results-content');
+    content.innerHTML = '';
+
+    const hint = document.createElement('p');
+    hint.className = 'diff-hint';
+    hint.textContent = 'Hover over "Before" images to see highlighted changes';
+    content.appendChild(hint);
+
+    data.urls.forEach((url, i) => {
+      const pair = document.createElement('div');
+      pair.className = 'result-pair fade-in';
+      pair.style.animationDelay = `${i * 0.15}s`;
+
+      // Before (original upload)
+      const beforeSide = document.createElement('div');
+      beforeSide.className = 'result-side';
+      const beforeImg = document.createElement('img');
+      beforeImg.src = `/api/v1/uploads/${jobId}/photo_${i}.jpg`;
+      beforeImg.crossOrigin = 'anonymous';
+      const beforeLabel = document.createElement('span');
+      beforeLabel.className = 'result-label before';
+      beforeLabel.textContent = 'Before';
+      const diffCanvas = document.createElement('canvas');
+      diffCanvas.className = 'diff-overlay';
+      beforeSide.appendChild(beforeImg);
+      beforeSide.appendChild(diffCanvas);
+      beforeSide.appendChild(beforeLabel);
+
+      // After (staged)
+      const afterSide = document.createElement('div');
+      afterSide.className = 'result-side';
+      const afterImg = document.createElement('img');
+      afterImg.src = url;
+      afterImg.crossOrigin = 'anonymous';
+      const afterLabel = document.createElement('span');
+      afterLabel.className = 'result-label after';
+      afterLabel.textContent = 'After';
+      afterSide.appendChild(afterImg);
+      afterSide.appendChild(afterLabel);
+
+      pair.appendChild(beforeSide);
+      pair.appendChild(afterSide);
+      content.appendChild(pair);
+
+      // Compute diff overlay once both images load
+      let loaded = 0;
+      const onBothLoaded = () => {
+        loaded++;
+        if (loaded < 2) return;
+        computeDiffOverlay(beforeImg, afterImg, diffCanvas);
+      };
+      beforeImg.onload = onBothLoaded;
+      afterImg.onload = onBothLoaded;
+    });
+  } catch (e) {
+    // results display failed
+  }
+}
+
+function computeDiffOverlay(beforeImg, afterImg, canvas) {
+  // Draw both images to offscreen canvases at the same size
+  const w = 512, h = 340; // downsample for speed
+  const c1 = document.createElement('canvas');
+  const c2 = document.createElement('canvas');
+  c1.width = c2.width = w;
+  c1.height = c2.height = h;
+  const ctx1 = c1.getContext('2d');
+  const ctx2 = c2.getContext('2d');
+  ctx1.drawImage(beforeImg, 0, 0, w, h);
+  ctx2.drawImage(afterImg, 0, 0, w, h);
+
+  const d1 = ctx1.getImageData(0, 0, w, h).data;
+  const d2 = ctx2.getImageData(0, 0, w, h).data;
+
+  // Build diff map — find regions with significant pixel changes
+  const blockSize = 16;
+  const cols = Math.ceil(w / blockSize);
+  const rows = Math.ceil(h / blockSize);
+  const diffBlocks = [];
+
+  for (let by = 0; by < rows; by++) {
+    for (let bx = 0; bx < cols; bx++) {
+      let totalDiff = 0, count = 0;
+      for (let y = by * blockSize; y < Math.min((by + 1) * blockSize, h); y++) {
+        for (let x = bx * blockSize; x < Math.min((bx + 1) * blockSize, w); x++) {
+          const idx = (y * w + x) * 4;
+          const dr = Math.abs(d1[idx] - d2[idx]);
+          const dg = Math.abs(d1[idx+1] - d2[idx+1]);
+          const db = Math.abs(d1[idx+2] - d2[idx+2]);
+          totalDiff += (dr + dg + db) / 3;
+          count++;
+        }
+      }
+      const avgDiff = totalDiff / count;
+      if (avgDiff > 30) {
+        diffBlocks.push({ x: bx * blockSize, y: by * blockSize, w: blockSize, h: blockSize, diff: avgDiff });
+      }
+    }
+  }
+
+  // Cluster nearby diff blocks into regions and draw circles
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, w, h);
+
+  if (diffBlocks.length === 0) return;
+
+  // Simple clustering: merge adjacent blocks into bounding boxes
+  const visited = new Set();
+  const regions = [];
+
+  for (let i = 0; i < diffBlocks.length; i++) {
+    if (visited.has(i)) continue;
+    const queue = [i];
+    visited.add(i);
+    let minX = diffBlocks[i].x, minY = diffBlocks[i].y;
+    let maxX = diffBlocks[i].x + blockSize, maxY = diffBlocks[i].y + blockSize;
+
+    while (queue.length > 0) {
+      const ci = queue.shift();
+      const cb = diffBlocks[ci];
+      for (let j = 0; j < diffBlocks.length; j++) {
+        if (visited.has(j)) continue;
+        const ob = diffBlocks[j];
+        if (Math.abs(cb.x - ob.x) <= blockSize * 2 && Math.abs(cb.y - ob.y) <= blockSize * 2) {
+          visited.add(j);
+          queue.push(j);
+          minX = Math.min(minX, ob.x);
+          minY = Math.min(minY, ob.y);
+          maxX = Math.max(maxX, ob.x + blockSize);
+          maxY = Math.max(maxY, ob.y + blockSize);
+        }
+      }
+    }
+    regions.push({ x: minX, y: minY, w: maxX - minX, h: maxY - minY });
+  }
+
+  // Draw ellipses around change regions
+  ctx.strokeStyle = 'rgba(176, 141, 87, 0.8)';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([6, 4]);
+
+  regions.forEach(r => {
+    if (r.w < blockSize * 2 && r.h < blockSize * 2) return; // skip tiny noise
+    const cx = r.x + r.w / 2;
+    const cy = r.y + r.h / 2;
+    const rx = r.w / 2 + 10;
+    const ry = r.h / 2 + 10;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  });
+}
+
+function resetForm() {
+  selectedFiles = [];
+  resultsSection.classList.remove('active');
+  document.getElementById('results-content').innerHTML = '';
+  document.getElementById('upload-section').style.display = 'block';
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Begin Staging';
+  updatePreviews();
+}
+
+function showError(msg) {
+  errorMsg.textContent = msg;
+  errorMsg.classList.add('active');
+}
+
+function hideError() {
+  errorMsg.classList.remove('active');
+}
+</script>
+</body>
+</html>

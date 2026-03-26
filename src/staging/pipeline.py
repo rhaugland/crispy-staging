@@ -8,9 +8,9 @@ logger = logging.getLogger(__name__)
 
 
 class StagingPipeline:
-    def __init__(self, storage, luma_client, room_classifier, quality_gate):
+    def __init__(self, storage, reconstructor, room_classifier, quality_gate):
         self.storage = storage
-        self.luma_client = luma_client
+        self.reconstructor = reconstructor
         self.room_classifier = room_classifier
         self.quality_gate = quality_gate
 

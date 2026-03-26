@@ -32,7 +32,7 @@ async def test_full_pipeline_mock_integration():
 
     pipeline = StagingPipeline(
         storage=storage,
-        luma_client=AsyncMock(),
+        reconstructor=MagicMock(),
         room_classifier=AsyncMock(),
         quality_gate=AsyncMock(),
     )

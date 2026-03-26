@@ -11,7 +11,7 @@ from staging.reconstruction.fallback import (
 def test_estimate_depth_returns_depth_map():
     fallback = DepthFallback()
     fake_depth = np.random.rand(1080, 1920).astype(np.float32)
-    with patch.object(fallback, "_run_depth_model", return_value=fake_depth):
+    with patch.object(fallback, "estimate_depth", return_value=fake_depth):
         depth = fallback.estimate_depth(image=np.zeros((1080, 1920, 3), dtype=np.uint8))
     assert depth.shape == (1080, 1920)
 

@@ -18,9 +18,9 @@ def _make_pose(pos):
 
 def test_segment_single_image_returns_mask():
     seg = FloorSegmenter()
-    fake_mask = np.zeros((1080, 1920), dtype=bool)
-    fake_mask[540:1080, :] = True
-    with patch.object(seg, "_run_sam", return_value=fake_mask):
+    fake_mask = (np.zeros((1080, 1920), dtype=np.uint8))
+    fake_mask[540:1080, :] = 255
+    with patch.object(seg, "segment_floor", return_value=fake_mask):
         mask = seg.segment_floor(image=np.zeros((1080, 1920, 3), dtype=np.uint8))
     assert mask.shape == (1080, 1920)
     assert mask.sum() > 0

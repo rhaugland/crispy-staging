@@ -1,47 +1,92 @@
+import numpy as np
 import pytest
-import httpx
-from unittest.mock import AsyncMock, patch
-from staging.reconstruction.client import LumaClient, ReconstructionResult
+from unittest.mock import patch, MagicMock
+from staging.reconstruction.client import (
+    ColmapReconstructor,
+    ReconstructionResult,
+    CameraPoseResult,
+)
 
 
-@pytest.fixture
-def client():
-    return LumaClient(api_key="test-key")
+def _mock_reconstruction():
+    """Create a mock pycolmap Reconstruction object."""
+    mock_recon = MagicMock()
+    mock_recon.num_reg_images.return_value = 3
+    mock_recon.num_points3D.return_value = 100
+
+    # Mock cameras
+    mock_cam = MagicMock()
+    mock_cam.focal_length = 500.0
+    mock_cam.width = 1024
+    mock_cam.height = 683
+    mock_recon.cameras = {1: mock_cam}
+
+    # Mock images
+    mock_images = {}
+    for i in range(3):
+        img = MagicMock()
+        img.name = f"{i+1}.jpg"
+        img.camera_id = 1
+
+        cfw = MagicMock()
+        rot = MagicMock()
+        rot.matrix.return_value = np.eye(3)
+        cfw.rotation = rot
+        cfw.translation = np.array([float(i), 0.0, 0.0])
+        img.cam_from_world.return_value = cfw
+        img.points2D = []
+        mock_images[i] = img
+
+    mock_recon.images = mock_images
+
+    # Mock 3D points
+    mock_recon.points3D = {}
+
+    return mock_recon
 
 
-@pytest.mark.asyncio
-async def test_submit_returns_capture_id(client):
-    mock_response = httpx.Response(200, json={"id": "capture-abc"})
-    with patch.object(client._client, "post", new_callable=AsyncMock, return_value=mock_response):
-        capture_id = await client.submit(photo_urls=["https://s3/a.jpg", "https://s3/b.jpg", "https://s3/c.jpg"])
-    assert capture_id == "capture-abc"
+def test_reconstruct_returns_result():
+    recon = ColmapReconstructor(quality="low")
+    mock_result = _mock_reconstruction()
+
+    with (
+        patch("pycolmap.extract_features"),
+        patch("pycolmap.match_exhaustive"),
+        patch("pycolmap.incremental_mapping", return_value={"0": mock_result}),
+    ):
+        result = recon.reconstruct(image_dir=MagicMock())
+
+    assert isinstance(result, ReconstructionResult)
+    assert len(result.camera_poses) == 3
+    assert result.camera_poses[0].image_name == "1.jpg"
 
 
-@pytest.mark.asyncio
-async def test_poll_until_complete(client):
-    responses = [
-        httpx.Response(200, json={"status": "processing"}),
-        httpx.Response(200, json={"status": "processing"}),
-        httpx.Response(200, json={"status": "complete", "mesh_url": "https://mesh", "cameras": []}),
-    ]
-    call_count = 0
+def test_reconstruct_no_result_raises():
+    recon = ColmapReconstructor(quality="low")
 
-    async def mock_get(*args, **kwargs):
-        nonlocal call_count
-        resp = responses[call_count]
-        call_count += 1
-        return resp
-
-    with patch.object(client._client, "get", side_effect=mock_get):
-        result = await client.poll(capture_id="capture-abc", interval=0.01)
-
-    assert result.mesh_url == "https://mesh"
-    assert call_count == 3
+    with (
+        patch("pycolmap.extract_features"),
+        patch("pycolmap.match_exhaustive"),
+        patch("pycolmap.incremental_mapping", return_value={}),
+    ):
+        with pytest.raises(RuntimeError, match="no valid reconstruction"):
+            recon.reconstruct(image_dir=MagicMock())
 
 
-@pytest.mark.asyncio
-async def test_poll_failure_raises(client):
-    mock_response = httpx.Response(200, json={"status": "failed", "error": "bad input"})
-    with patch.object(client._client, "get", new_callable=AsyncMock, return_value=mock_response):
-        with pytest.raises(RuntimeError, match="bad input"):
-            await client.poll(capture_id="capture-abc", interval=0.01)
+def test_camera_pose_extraction():
+    recon = ColmapReconstructor(quality="low")
+    mock_result = _mock_reconstruction()
+
+    with (
+        patch("pycolmap.extract_features"),
+        patch("pycolmap.match_exhaustive"),
+        patch("pycolmap.incremental_mapping", return_value={"0": mock_result}),
+    ):
+        result = recon.reconstruct(image_dir=MagicMock())
+
+    pose = result.camera_poses[0]
+    assert pose.focal_length == 500.0
+    assert pose.image_width == 1024
+    assert pose.image_height == 683
+    assert pose.position.shape == (3,)
+    assert pose.rotation.shape == (3, 3)
