@@ -24,7 +24,7 @@ ROOM_TYPE_MAP = {
 
 # Specific furniture + style combos for SDXL prompts
 ROOM_FURNITURE = {
-    "living": "a large sofa, accent chairs, a coffee table, side tables, a rug, table lamps, throw pillows, and wall art",
+    "living": "exactly one 3-seat sofa, exactly two accent chairs, one coffee table, two side tables, one area rug, two table lamps, throw pillows, and one piece of wall art",
     "bedroom": "a bed with headboard and bedding, nightstands, table lamps, a dresser, an accent chair, a rug, and wall art",
     "dining": "a dining table, dining chairs, a sideboard or buffet, a centerpiece, table settings, a rug, and wall art",
     "kitchen": "bar stools, a kitchen island arrangement, pendant lights, decorative bowls, plants, and countertop accessories",
@@ -34,64 +34,79 @@ ROOM_FURNITURE = {
 
 STYLE_PROMPTS = {
     "modern": (
-        "Furniture style: sleek low-profile furniture with clean geometric lines. "
-        "Black, white, and gray upholstery. Chrome and glass accent tables. "
-        "Contemporary art prints on walls. Simple geometric rug."
+        "Furniture: charcoal gray linen 3-seat track-arm sofa with square cushions, "
+        "two matching charcoal gray linen square-back armchairs with chrome legs, "
+        "round white lacquer coffee table, chrome arc floor lamp, "
+        "black and white geometric area rug, abstract black and white art print on wall."
     ),
     "traditional": (
-        "Furniture style: classic dark wood furniture with carved details. "
-        "Burgundy, navy, and forest green fabric upholstery. Tufted cushions. "
-        "Oriental area rug. Brass table lamps. Framed oil paintings on walls."
+        "Furniture: navy blue tufted velvet rolled-arm 3-seat sofa, "
+        "two matching burgundy velvet wingback armchairs with dark cherry wood legs, "
+        "dark cherry wood rectangular coffee table, burgundy throw pillows, "
+        "red and navy oriental area rug, brass candlestick table lamps, gold-framed oil painting on wall."
     ),
     "scandinavian": (
-        "Furniture style: light oak and birch wood furniture with simple rounded forms. "
-        "White and pale gray upholstery with soft blush accents. "
-        "Sheepskin throws, knit blankets, ceramic vases on tables."
+        "Furniture: white linen 3-seat sofa with rounded arms, "
+        "two matching pale gray linen rounded armchairs with light oak legs, "
+        "round light oak coffee table, pale blush throw pillows, light gray wool area rug, "
+        "white ceramic vases, simple line art print in thin black frame on wall."
     ),
     "luxury": (
-        "Furniture style: plush velvet furniture in emerald, navy, or burgundy. "
-        "Gold and marble accent tables. Crystal table lamps. Silk cushions. "
-        "Large-scale framed artwork. Thick pile area rug."
+        "Furniture: emerald green velvet tufted 3-seat Chesterfield sofa, "
+        "two matching navy velvet barrel-back armchairs with gold legs, "
+        "round white marble coffee table with gold legs, crystal table lamps, "
+        "cream silk throw pillows, ivory thick pile area rug, large gold-framed abstract art on wall."
     ),
     "coastal": (
-        "Furniture style: white and light blue slipcovered sofas. "
-        "Rattan and wicker accent chairs. Driftwood coffee table. "
-        "Seagrass area rug. Coral and shell decor on tables. Nautical art prints."
+        "Furniture: white slipcovered rolled-arm 3-seat sofa, light blue throw pillows, "
+        "two matching round natural rattan armchairs with white cushions, "
+        "rectangular driftwood coffee table, "
+        "beige seagrass area rug, blue and white nautical art print on wall."
     ),
     "midcenturymodern": (
-        "Furniture style: furniture with organic curves and tapered wooden legs. "
-        "Warm walnut and teak wood tones. Mustard yellow, olive green, and burnt orange fabrics. "
-        "Sunburst mirror on wall. Abstract art prints."
+        "Furniture: mustard yellow upholstered 3-seat sofa with tapered walnut legs, "
+        "two matching olive green upholstered armchairs with tapered walnut legs, "
+        "round warm walnut coffee table, burnt orange throw pillows, "
+        "cream and tan geometric area rug, abstract orange and gold art print on wall."
     ),
     "farmhouse": (
-        "Furniture style: distressed white-painted wood furniture. "
-        "Natural linen slipcovered sofas. Wooden farm table. Ladder shelf. "
-        "Woven baskets. Gingham throw pillows. Galvanized metal table accessories."
+        "Furniture: cream linen slipcovered rolled-arm 3-seat sofa, "
+        "two matching natural linen armchairs with distressed white oak legs, "
+        "rectangular distressed white oak coffee table, sage green throw pillows, "
+        "natural jute area rug, galvanized metal table lamp, "
+        "vintage botanical print in white frame on wall."
     ),
     "industrial": (
-        "Furniture style: raw metal and reclaimed wood furniture. Metal pipe shelving. "
-        "Dark leather Chesterfield sofa. Riveted metal coffee table. "
-        "Vintage factory clock on wall. Dark moody colored textiles."
+        "Furniture: dark brown leather tufted 3-seat Chesterfield sofa, "
+        "two matching dark brown leather club armchairs with riveted details, "
+        "rectangular black iron and reclaimed wood coffee table, "
+        "matte black metal tripod floor lamp, charcoal gray wool area rug, "
+        "vintage black and white photography print on wall."
     ),
     "minimalist": (
-        "Furniture style: very few carefully chosen pieces. "
-        "Low platform furniture in white, black, or light wood. "
-        "One single statement art piece on wall. Simple geometric area rug."
+        "Furniture: white low-profile 3-seat platform sofa with clean lines, "
+        "one matching white low-profile armchair with clean lines, "
+        "round light ash wood coffee table, single matte black floor lamp, "
+        "off-white wool area rug, one large minimalist black and white art print on wall."
     ),
     "contemporary": (
-        "Furniture style: sculptural furniture forms with mixed materials. "
-        "Marble and brass accent tables. Bouclé fabric upholstery. "
-        "Muted earth tones with one bold accent color. Oversized art on wall."
+        "Furniture: taupe bouclé curved 3-seat sofa, "
+        "two matching taupe bouclé rounded armchairs with brass legs, "
+        "round white marble coffee table with brass legs, terracotta accent pillow, "
+        "warm beige wool area rug, large-scale earth-toned abstract art on wall."
     ),
     "boho": (
-        "Furniture style: layered eclectic mix of colorful furniture. "
-        "Low floor seating with colorful cushions. Macramé wall hanging. "
-        "Moroccan poufs. Kilim area rug. Rattan peacock chair. Trailing potted plants."
+        "Furniture: low terracotta linen 3-seat floor sofa, colorful embroidered throw pillows, "
+        "two matching round rattan peacock armchairs with colorful cushions, "
+        "multicolor kilim area rug, "
+        "macramé wall hanging, trailing pothos plant in woven basket."
     ),
     "rustic": (
-        "Furniture style: heavy natural timber furniture. "
-        "Thick wool blankets. Leather and hide upholstery. Wrought iron hardware. "
-        "Warm amber and brown textiles. Handcrafted pottery on tables."
+        "Furniture: cognac brown leather 3-seat rolled-arm sofa, "
+        "two matching cognac brown leather club armchairs, "
+        "heavy rectangular dark pine wood coffee table, cream wool throw blanket, "
+        "wrought iron table lamp, brown and tan cowhide area rug, "
+        "landscape oil painting in wood frame on wall."
     ),
 }
 
@@ -151,12 +166,11 @@ def _describe_furniture(image_path: Path) -> str:
         "contents": [{
             "parts": [
                 {"text": (
-                    "Describe ONLY the furniture and decor in this room in one paragraph. "
-                    "Include specific details: wood tone (e.g. light oak, dark walnut), "
-                    "fabric colors, material types (velvet, linen, leather), metal finishes "
-                    "(brass, chrome, matte black), rug colors/patterns, and art style. "
-                    "Be very specific about colors and materials so another room could be "
-                    "furnished to match."
+                    "In 2-3 sentences, describe the furniture style: wood tone, "
+                    "fabric colors, material types, metal finishes, and rug color. "
+                    "Example: 'Dark walnut wood with navy velvet upholstery. "
+                    "Brass accents and cream wool rug.' "
+                    "Do NOT mention walls, floors, countertops, cabinets, or room structure."
                 )},
                 {"inline_data": {"mime_type": mime, "data": image_b64}},
             ]
@@ -194,6 +208,7 @@ def _stage_gemini(
     style: str,
     output_path: Path,
     furniture_description: str = "",
+    seed: int = 0,
 ) -> Path:
     """Stage an empty room using Gemini image generation."""
     api_key = os.environ.get("GEMINI_API_KEY")
@@ -204,24 +219,28 @@ def _stage_gemini(
     furniture = ROOM_FURNITURE.get(room_type, "furniture, rugs, lamps, and decor")
     style_desc = STYLE_PROMPTS.get(style, f"{style} interior design style.")
 
+    furniture_match = ""
+    if furniture_description:
+        furniture_match = f" Use these specific colors and materials: {furniture_description}"
+
     prompt = (
-        f"Edit this photo of an empty {room_name}. Add furniture ONLY — do not remove, replace, "
-        f"or alter anything that already exists in the photo. "
-        f"ABSOLUTE RULES — NEVER BREAK THESE: "
-        f"1. Every countertop in this photo must remain exactly as-is — same material, same color, same shape, fully visible. "
-        f"2. Every cabinet must remain exactly as-is. "
-        f"3. Every sink, appliance, and fixture must remain exactly as-is. "
-        f"4. Camera angle and perspective must not change at all. "
-        f"5. Walls, floors, ceiling, windows, doors, trim, molding, vents, outlets — all unchanged. "
-        f"Add ONLY these items into the empty space: {furniture}. "
-        f"{style_desc} "
-        f"Place furniture on the existing floors. Do not put furniture where countertops or cabinets are. "
+        f"RULE 1 — PRESERVE EVERYTHING: Do not remove, replace, or alter anything already in this photo. "
+        f"Every countertop stays exactly as-is — same material, color, shape, fully visible, fully opaque, fully solid. Do not make countertops transparent or translucent. "
+        f"Every cabinet, sink, appliance, fixture stays exactly as-is. "
+        f"Walls, floors, ceiling, windows, doors, trim, molding, vents, outlets — all unchanged. "
+        f"The camera has NOT moved — same angle, same height, same position, same lens, same field of view. Do not zoom, crop, rotate, or shift the viewpoint at all. The output must be pixel-aligned with the input photo. "
+        f"RULE 2 — ADD FURNITURE: Edit this photo of an empty {room_name}. "
+        f"Place furniture ONLY in empty floor space, never where countertops or cabinets are. "
+        f"Add exactly: {furniture}. "
+        f"RULE 3 — EXACT STYLE: {style_desc}{furniture_match} "
+        f"Use EXACTLY the colors and materials specified — do not adapt them to match the room. "
+        f"RULE 4 — EXACT COUNT: Place exactly ONE sofa and exactly TWO accent chairs. No more, no fewer. "
+        f"The sofa must be the exact same style described above in every photo. "
         f"Photorealistic real estate photograph."
     )
 
     logger.info(f"Gemini: staging {image_path.name} as {room_name}/{style}")
 
-    # Single image only — no reference image to avoid confusing Gemini
     image_data = image_path.read_bytes()
     image_b64 = base64.b64encode(image_data).decode("utf-8")
     ext = image_path.suffix.lower()
@@ -232,10 +251,11 @@ def _stage_gemini(
             "parts": [
                 {"text": prompt},
                 {"inline_data": {"mime_type": mime, "data": image_b64}},
-            ]
+            ],
         }],
         "generationConfig": {
             "responseModalities": ["IMAGE"],
+            "seed": seed,
         },
     }).encode("utf-8")
 
@@ -246,13 +266,38 @@ def _stage_gemini(
         method="POST",
     )
 
-    try:
-        with urllib.request.urlopen(req, timeout=180) as resp:
-            result = json.loads(resp.read().decode("utf-8"))
-    except urllib.error.HTTPError as e:
-        error_body = e.read().decode("utf-8", errors="replace")
-        logger.error(f"Gemini API error {e.code}: {error_body}")
-        raise RuntimeError(f"Gemini API error {e.code}: {error_body}") from e
+    import time as _time
+    last_error = None
+    result = None
+    for attempt in range(3):
+        if attempt > 0:
+            wait = 10 * attempt
+            logger.info(f"Gemini: retry {attempt}/2 after {wait}s...")
+            _time.sleep(wait)
+            # rebuild request (urlopen consumes it)
+            req = urllib.request.Request(
+                f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent?key={api_key}",
+                data=payload,
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        try:
+            with urllib.request.urlopen(req, timeout=300) as resp:
+                result = json.loads(resp.read().decode("utf-8"))
+            break
+        except urllib.error.HTTPError as e:
+            error_body = e.read().decode("utf-8", errors="replace")
+            logger.warning(f"Gemini API error {e.code} (attempt {attempt+1}): {error_body}")
+            if e.code in (503, 429, 500):
+                last_error = RuntimeError(f"Gemini API error {e.code}: {error_body}")
+                continue
+            raise RuntimeError(f"Gemini API error {e.code}: {error_body}") from e
+        except (urllib.error.URLError, TimeoutError) as e:
+            logger.warning(f"Gemini timeout/network error (attempt {attempt+1}): {e}")
+            last_error = RuntimeError(f"Gemini network error: {e}")
+            continue
+    else:
+        raise last_error
 
     # Extract generated image from Gemini response
     candidates = result.get("candidates", [])
@@ -338,8 +383,8 @@ def _harmonize_style(
                 "blurry, low quality, distorted, deformed, watermark, "
                 "cartoon, illustration, anime, CGI, unrealistic"
             ),
-            "structure_depth_strength": 1.5,
-            "structure_denoising_strength": 0.25,
+            "structure_depth_strength": 2.0,
+            "structure_denoising_strength": 0.20,
             "model": "realistic",
             "seed": seed,
             "output_format": "jpg",
@@ -377,11 +422,12 @@ def stage_photo(
     if room_status == "empty":
         # Gemini for empty rooms — image generation with structure preservation
         logger.info("Using Gemini for empty room staging")
-        _stage_gemini(image_path, room_type, style, output_path)
+        _stage_gemini(image_path, room_type, style, output_path, seed=seed)
     else:
         # SDXL for furnished rooms — subtle furniture swap
         logger.info("Using SDXL img2img for furnished room")
         _stage_sdxl(image_path, room_type, style, seed, output_path)
+
 
     logger.info(f"Saved staged image to {output_path}")
     return output_path
