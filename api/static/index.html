@@ -499,12 +499,57 @@
     color: var(--gold);
   }
 
+  .results-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  .download-btn {
+    background: var(--ink);
+    color: var(--cream);
+    border-color: var(--ink);
+  }
+
+  .download-btn:hover {
+    background: var(--gold) !important;
+    color: white !important;
+    border-color: var(--gold) !important;
+  }
+
+  /* Model status banner */
+  .model-banner {
+    padding: 0.6rem 3rem;
+    background: var(--ink);
+    color: var(--cream);
+    font-size: 0.78rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    letter-spacing: 0.02em;
+  }
+
+  .model-banner strong {
+    color: white;
+  }
+
+  .model-banner .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .model-banner .status-dot.green { background: #6fbf73; }
+  .model-banner .status-dot.yellow { background: #e6c530; }
+  .model-banner .status-dot.red { background: #e05550; }
+
   /* Toast notification */
   .toast {
     position: fixed;
-    bottom: 2rem;
+    top: 1.5rem;
     left: 50%;
-    transform: translateX(-50%) translateY(20px);
+    transform: translateX(-50%) translateY(-20px);
     background: var(--ink);
     color: var(--cream);
     padding: 0.7rem 1.5rem;
@@ -515,6 +560,7 @@
     transition: all 0.3s ease;
     pointer-events: none;
     z-index: 100;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   }
 
   .toast.show {
@@ -541,6 +587,11 @@
 </head>
 <body>
 
+<div class="model-banner">
+  <span class="status-dot green"></span>
+  <span>Model: SDXL img2img &mdash; Last checked <strong>Mar 26, 2025</strong> &mdash; Status: No significant updates</span>
+</div>
+
 <header>
   <h1>Virtual Staging</h1>
   <span>by Isotropic</span>
@@ -551,7 +602,7 @@
   <div id="upload-section">
     <h2 class="page-title">Stage Your Listing</h2>
     <p class="page-subtitle">
-      Upload 3–4 photos of the same room from different angles. We'll reconstruct the space and place furniture consistently across every view.
+      Upload 1–4 photos of a room. We'll stage each one with furniture matching your selected style.
     </p>
 
     <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
@@ -561,7 +612,7 @@
         <path d="M6 34l10-10 8 8 6-6 12 12"/>
       </svg>
       <div class="upload-text">Drop photos here</div>
-      <div class="upload-hint">or click to browse — JPEG or PNG, 3–4 photos</div>
+      <div class="upload-hint">or click to browse — JPEG or PNG, 1–4 photos</div>
     </div>
 
     <input type="file" id="file-input" accept="image/jpeg,image/png" multiple>
@@ -569,7 +620,7 @@
     <div class="constraints">
       <div class="constraint">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M6 2v12M10 2v12M2 6h12M2 10h12"/></svg>
-        3–4 photos
+        1–4 photos
       </div>
       <div class="constraint">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="3" width="14" height="10" rx="2"/><circle cx="5.5" cy="7" r="1.5"/><path d="M1 11l4-4 3 3 2-2 5 5"/></svg>
@@ -676,6 +727,13 @@
           <option value="rustic">Rustic</option>
         </select>
       </div>
+      <div class="option-group">
+        <label>Room Status</label>
+        <select id="room-status">
+          <option value="empty">Empty Room</option>
+          <option value="furnished">Already Furnished</option>
+        </select>
+      </div>
     </div>
 
     <button class="submit-btn" id="submit-btn" disabled>
@@ -703,11 +761,16 @@
   <div class="results-section" id="results-section">
     <h2 class="results-title">Staging Complete</h2>
     <div id="results-content" class="results-grid"></div>
+    <div class="results-actions">
+      <button class="new-job-btn" onclick="resetForm()">Stage Another Room</button>
+      <button class="new-job-btn download-btn" id="download-pdf-btn" onclick="downloadPDF()">Download PDF</button>
+    </div>
   </div>
 </main>
 
 <div class="toast" id="toast"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 const uploadZone = document.getElementById('upload-zone');
 const fileInput = document.getElementById('file-input');
@@ -718,6 +781,7 @@ const progressSection = document.getElementById('progress-section');
 const resultsSection = document.getElementById('results-section');
 
 let selectedFiles = [];
+let currentJobId = null;
 
 // Drag & drop
 uploadZone.addEventListener('dragover', (e) => {
@@ -801,12 +865,12 @@ function updatePreviews() {
     previewGrid.appendChild(div);
   });
 
-  submitBtn.disabled = selectedFiles.length < 3;
+  submitBtn.disabled = selectedFiles.length < 1;
 }
 
 // Submit
 submitBtn.addEventListener('click', async () => {
-  if (selectedFiles.length < 3) return;
+  if (selectedFiles.length < 1) return;
 
   submitBtn.disabled = true;
   submitBtn.textContent = 'Uploading…';
@@ -816,6 +880,7 @@ submitBtn.addEventListener('click', async () => {
   selectedFiles.forEach(f => formData.append('photos', f));
   formData.append('room_type', document.getElementById('room-type').value);
   formData.append('style', document.getElementById('style').value);
+  formData.append('room_status', document.getElementById('room-status').value);
 
   try {
     const resp = await fetch('/api/v1/jobs', { method: 'POST', body: formData });
@@ -834,6 +899,7 @@ submitBtn.addEventListener('click', async () => {
 
 // Progress polling
 function showProgress(jobId) {
+  window.scrollTo(0, 0);
   document.getElementById('upload-section').style.display = 'none';
   progressSection.classList.add('active');
 
@@ -886,6 +952,8 @@ function showProgress(jobId) {
 }
 
 async function showResults(jobId) {
+  window.scrollTo(0, 0);
+  currentJobId = jobId;
   progressSection.classList.remove('active');
   resultsSection.classList.add('active');
   resultsSection.classList.add('fade-in');
@@ -897,37 +965,27 @@ async function showResults(jobId) {
     const content = document.getElementById('results-content');
     content.innerHTML = '';
 
-    const hint = document.createElement('p');
-    hint.className = 'diff-hint';
-    hint.textContent = 'Hover over "Before" images to see highlighted changes';
-    content.appendChild(hint);
-
     data.urls.forEach((url, i) => {
       const pair = document.createElement('div');
       pair.className = 'result-pair fade-in';
       pair.style.animationDelay = `${i * 0.15}s`;
 
-      // Before (original upload)
+      // Before
       const beforeSide = document.createElement('div');
       beforeSide.className = 'result-side';
       const beforeImg = document.createElement('img');
-      beforeImg.src = `/api/v1/uploads/${jobId}/photo_${i}.jpg`;
-      beforeImg.crossOrigin = 'anonymous';
+      beforeImg.src = data.originals ? data.originals[i] : `/api/v1/uploads/${jobId}/photo_${i}.jpg`;
       const beforeLabel = document.createElement('span');
       beforeLabel.className = 'result-label before';
       beforeLabel.textContent = 'Before';
-      const diffCanvas = document.createElement('canvas');
-      diffCanvas.className = 'diff-overlay';
       beforeSide.appendChild(beforeImg);
-      beforeSide.appendChild(diffCanvas);
       beforeSide.appendChild(beforeLabel);
 
-      // After (staged)
+      // After
       const afterSide = document.createElement('div');
       afterSide.className = 'result-side';
       const afterImg = document.createElement('img');
       afterImg.src = url;
-      afterImg.crossOrigin = 'anonymous';
       const afterLabel = document.createElement('span');
       afterLabel.className = 'result-label after';
       afterLabel.textContent = 'After';
@@ -937,119 +995,16 @@ async function showResults(jobId) {
       pair.appendChild(beforeSide);
       pair.appendChild(afterSide);
       content.appendChild(pair);
-
-      // Compute diff overlay once both images load
-      let loaded = 0;
-      const onBothLoaded = () => {
-        loaded++;
-        if (loaded < 2) return;
-        computeDiffOverlay(beforeImg, afterImg, diffCanvas);
-      };
-      beforeImg.onload = onBothLoaded;
-      afterImg.onload = onBothLoaded;
     });
   } catch (e) {
     // results display failed
   }
 }
 
-function computeDiffOverlay(beforeImg, afterImg, canvas) {
-  // Draw both images to offscreen canvases at the same size
-  const w = 512, h = 340; // downsample for speed
-  const c1 = document.createElement('canvas');
-  const c2 = document.createElement('canvas');
-  c1.width = c2.width = w;
-  c1.height = c2.height = h;
-  const ctx1 = c1.getContext('2d');
-  const ctx2 = c2.getContext('2d');
-  ctx1.drawImage(beforeImg, 0, 0, w, h);
-  ctx2.drawImage(afterImg, 0, 0, w, h);
 
-  const d1 = ctx1.getImageData(0, 0, w, h).data;
-  const d2 = ctx2.getImageData(0, 0, w, h).data;
-
-  // Build diff map — find regions with significant pixel changes
-  const blockSize = 16;
-  const cols = Math.ceil(w / blockSize);
-  const rows = Math.ceil(h / blockSize);
-  const diffBlocks = [];
-
-  for (let by = 0; by < rows; by++) {
-    for (let bx = 0; bx < cols; bx++) {
-      let totalDiff = 0, count = 0;
-      for (let y = by * blockSize; y < Math.min((by + 1) * blockSize, h); y++) {
-        for (let x = bx * blockSize; x < Math.min((bx + 1) * blockSize, w); x++) {
-          const idx = (y * w + x) * 4;
-          const dr = Math.abs(d1[idx] - d2[idx]);
-          const dg = Math.abs(d1[idx+1] - d2[idx+1]);
-          const db = Math.abs(d1[idx+2] - d2[idx+2]);
-          totalDiff += (dr + dg + db) / 3;
-          count++;
-        }
-      }
-      const avgDiff = totalDiff / count;
-      if (avgDiff > 30) {
-        diffBlocks.push({ x: bx * blockSize, y: by * blockSize, w: blockSize, h: blockSize, diff: avgDiff });
-      }
-    }
-  }
-
-  // Cluster nearby diff blocks into regions and draw circles
-  canvas.width = w;
-  canvas.height = h;
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, w, h);
-
-  if (diffBlocks.length === 0) return;
-
-  // Simple clustering: merge adjacent blocks into bounding boxes
-  const visited = new Set();
-  const regions = [];
-
-  for (let i = 0; i < diffBlocks.length; i++) {
-    if (visited.has(i)) continue;
-    const queue = [i];
-    visited.add(i);
-    let minX = diffBlocks[i].x, minY = diffBlocks[i].y;
-    let maxX = diffBlocks[i].x + blockSize, maxY = diffBlocks[i].y + blockSize;
-
-    while (queue.length > 0) {
-      const ci = queue.shift();
-      const cb = diffBlocks[ci];
-      for (let j = 0; j < diffBlocks.length; j++) {
-        if (visited.has(j)) continue;
-        const ob = diffBlocks[j];
-        if (Math.abs(cb.x - ob.x) <= blockSize * 2 && Math.abs(cb.y - ob.y) <= blockSize * 2) {
-          visited.add(j);
-          queue.push(j);
-          minX = Math.min(minX, ob.x);
-          minY = Math.min(minY, ob.y);
-          maxX = Math.max(maxX, ob.x + blockSize);
-          maxY = Math.max(maxY, ob.y + blockSize);
-        }
-      }
-    }
-    regions.push({ x: minX, y: minY, w: maxX - minX, h: maxY - minY });
-  }
-
-  // Draw ellipses around change regions
-  ctx.strokeStyle = 'rgba(176, 141, 87, 0.8)';
-  ctx.lineWidth = 2;
-  ctx.setLineDash([6, 4]);
-
-  regions.forEach(r => {
-    if (r.w < blockSize * 2 && r.h < blockSize * 2) return; // skip tiny noise
-    const cx = r.x + r.w / 2;
-    const cy = r.y + r.h / 2;
-    const rx = r.w / 2 + 10;
-    const ry = r.h / 2 + 10;
-    ctx.beginPath();
-    ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
-    ctx.stroke();
-  });
-}
 
 function resetForm() {
+  window.scrollTo(0, 0);
   selectedFiles = [];
   resultsSection.classList.remove('active');
   document.getElementById('results-content').innerHTML = '';
@@ -1066,6 +1021,101 @@ function showError(msg) {
 
 function hideError() {
   errorMsg.classList.remove('active');
+}
+
+async function downloadPDF() {
+  if (!currentJobId) return;
+
+  const btn = document.getElementById('download-pdf-btn');
+  btn.textContent = 'Generating PDF…';
+  btn.disabled = true;
+
+  try {
+    const resp = await fetch(`/api/v1/jobs/${currentJobId}/results`);
+    const data = await resp.json();
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter' });
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+
+    const margin = 40;
+    const gap = 16;
+    const count = data.urls.length;
+
+    // Title area at top
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(24);
+    pdf.setTextColor(26, 26, 26);
+    pdf.text('Virtual Staging', margin, 45);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(10);
+    pdf.setTextColor(150, 140, 130);
+    pdf.text('by Isotropic  —  ' + new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }), margin, 62);
+
+    // One page per photo: before/after side by side
+    const imgW = (pageW - margin * 2 - gap) / 2;
+    const imgH = imgW * 0.667;
+
+    for (let i = 0; i < count; i++) {
+      if (i > 0) pdf.addPage();
+
+      // Page header
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(16);
+      pdf.setTextColor(26, 26, 26);
+      pdf.text(`Photo ${i + 1}`, pageW / 2, 40, { align: 'center' });
+
+      // Labels
+      const labelY = 58;
+      pdf.setFontSize(10);
+      pdf.setTextColor(180, 170, 160);
+      pdf.text('BEFORE', margin + imgW / 2, labelY, { align: 'center' });
+      pdf.text('AFTER', margin + imgW + gap + imgW / 2, labelY, { align: 'center' });
+
+      const imgY = labelY + 10;
+      const beforeUrl = data.originals ? data.originals[i] : `/api/v1/uploads/${currentJobId}/photo_${i}.jpg`;
+      const beforeData = await loadImageAsDataURL(beforeUrl);
+      const afterData = await loadImageAsDataURL(data.urls[i]);
+
+      pdf.setDrawColor(200, 195, 188);
+      pdf.setLineWidth(0.5);
+
+      if (beforeData) {
+        pdf.addImage(beforeData, 'JPEG', margin, imgY, imgW, imgH);
+        pdf.rect(margin, imgY, imgW, imgH);
+      }
+      if (afterData) {
+        pdf.addImage(afterData, 'JPEG', margin + imgW + gap, imgY, imgW, imgH);
+        pdf.rect(margin + imgW + gap, imgY, imgW, imgH);
+      }
+    }
+
+    pdf.save(`staging-${currentJobId}.pdf`);
+    showToast('PDF downloaded');
+  } catch (e) {
+    showToast('PDF generation failed');
+    console.error(e);
+  } finally {
+    btn.textContent = 'Download PDF';
+    btn.disabled = false;
+  }
+}
+
+function loadImageAsDataURL(url) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = img.naturalWidth;
+      c.height = img.naturalHeight;
+      c.getContext('2d').drawImage(img, 0, 0);
+      resolve(c.toDataURL('image/jpeg', 0.92));
+    };
+    img.onerror = () => resolve(null);
+    img.src = url;
+  });
 }
 </script>
 </body>

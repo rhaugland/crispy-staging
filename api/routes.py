@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import asyncio
 import io
+import logging
 import uuid
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
@@ -24,6 +27,7 @@ async def create_job(
     photos: list[UploadFile] = File(...),
     room_type: str = Form("living"),
     style: str = Form("modern"),
+    room_status: str = Form("empty"),
 ):
     photo_bytes = [await p.read() for p in photos]
     try:
@@ -48,6 +52,7 @@ async def create_job(
         "status": "pending",
         "room_type": room_type,
         "style": style,
+        "room_status": room_status,
         "photo_keys": photo_keys,
         "error": None,
         "result_urls": [],
@@ -75,14 +80,15 @@ async def job_status(job_id: str):
     }
 
 
-@router.get("/jobs/{job_id}/results", response_model=JobResultsResponse)
+@router.get("/jobs/{job_id}/results")
 async def job_results(job_id: str):
     job = _jobs.get(job_id)
     if job is None:
         raise HTTPException(status_code=404, detail="Job not found")
     if job["status"] != "completed":
         raise HTTPException(status_code=400, detail=f"Job status: {job['status']}")
-    return JobResultsResponse(urls=job["result_urls"])
+    originals = [f"/api/v1/uploads/{job_id}/{k}" for k in job["photo_keys"]]
+    return {"urls": job["result_urls"], "originals": originals}
 
 
 @router.get("/uploads/{job_id}/{filename}")
@@ -116,12 +122,12 @@ def _process_job_sync(job_id: str):
     try:
         job["status"] = "staging"
 
-        job_seed = random.randint(0, 2**32 - 1)
+        job_seed = random.randint(0, 2**31 - 1)
         staged_urls = []
         reference_path = None
         for i, fname in enumerate(job["photo_keys"]):
             if i > 0:
-                time.sleep(15)  # space out requests (2 API calls per photo, 6/min limit)
+                time.sleep(12)  # space out requests for rate limits
             photo_path = job_dir / fname
             staged_path = job_dir / f"staged_{i}.jpg"
             stage_photo(
@@ -131,6 +137,7 @@ def _process_job_sync(job_id: str):
                 seed=job_seed,
                 output_path=staged_path,
                 reference_image=reference_path,
+                room_status=job.get("room_status", "empty"),
             )
             # First staged result becomes the style reference for all subsequent photos
             if i == 0:
@@ -142,5 +149,7 @@ def _process_job_sync(job_id: str):
         job["result_urls"] = staged_urls
 
     except Exception as e:
+        import traceback
+        logger.error(f"Job {job_id} failed: {traceback.format_exc()}")
         job["status"] = "failed"
         job["error"] = str(e)

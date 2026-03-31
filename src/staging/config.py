@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     anthropic_api_key: str = ""
     redis_url: str = "redis://localhost:6379"
     max_photos: int = 4
-    min_photos: int = 3
+    min_photos: int = 1
     max_file_size_mb: int = 20
     min_resolution: tuple[int, int] = (640, 480)
     max_resolution: tuple[int, int] = (8000, 6000)
